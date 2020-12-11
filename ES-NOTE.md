@@ -207,7 +207,7 @@ POST index/_search
 {
 	"query":{
 		"match":{
-			"comment":{
+                "comment":{
 				"query":"Last Date",
 				"operator":"AND"
 			}
@@ -450,27 +450,204 @@ PUT users/_doc/1
 - Pipeline Aggregation -- 对其他的聚合结果进行二次聚合
 - Matric Aggregation -- 支持多个字段的操作，并提供一个结果矩阵
 
+### Update/Create
+
+#### 部分字段修改操作
+
+```
+POST es_member_activity_goods_for_search/type/1/_update
+{
+  "doc": {
+    "saleStatus":1,
+    "isAppShow":1,
+    "storeStatus":2
+  }
+}
+
+```
+
+#### 覆盖原来文档内容，及映射
+
+```
+PUT school_alias/_doc/1
+{
+  "id":1,
+  "name":"西河一中",
+  "address":"西河"
+}
+
+```
+
+### Delete
+
+#### 删除部分文档数据
+
+```
+POST es_member_activity_goods_for_search/content/_delete_by_query
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+```
+
+### Alias
+
+#### 创建别名
+
+```
+POST /_aliases
+{
+  "actions": [
+    {
+      "add": {
+        "index": "school_index", ----元索引
+        "alias": "school_alias"  ----别名
+      }
+    }
+  ]
+}
+```
+
+#### 删除别名（只删除元索引关联的别名）
+
+```
+POST /_aliases
+{
+  "actions": [
+    {
+      "remove": {
+        "index": "school_index", ----元索引
+        "alias": "school_alias"  ----别名
+      }
+    }
+  ]
+}                                                                           
+```
+
+```
+DELETE /{index}/_alias/{name}  
+```
 
 
 
+#### 修改别名
 
+```
+POST /_aliases
+{
+  "actions": [
+    {
+      "remove": {
+        "index": "school_index",
+        "alias": "school_alias"   ----删除之前索引别名
+      }
+    },
+    {
+      "add": {
+        "index": "school_index",
+        "alias": "school_Alias"   ----添加新的索引别名
+      }
+    }
+  ]
+}
 
+```
 
+#### 查询索引与别名的映射关系
 
+```
+GET school_index/_alias   ---- 索引名查询
+GET school_Alias/_alias   ---- 别名查询
 
+返回结果：
 
+{
+  "school_index": {
+    "aliases": {
+      "school_Alias": {}
+    }
+  }
+}
+```
 
+#### 别名关联多条索引
 
+```
+POST /_aliases                   ----------- 法一：分别添加
+{
+  "actions": [
+    {
+      "add": {
+        "index": "school_index",
+        "alias": "ss_alias"
+      }
+    },
+    {
+      "add": {
+        "index": "student_index",
+        "alias": "ss_alias"
+      }
+    }
+  ]
+}
 
+```
 
+```
+POST /_aliases                    ----------- 法二：一次添加
+{
+  "actions": [
+    {
+      "add": {
+        "indices":["school_index","student_index"],
+        "alias": "ss_alias"
+      }
+    }
+  ]
+}
+```
 
+### RoutingKey
 
+#### 添加路由，唯一绑定可修改索引（is_write_index）
 
+```
+POST /_aliases
+{
+  "actions": [
+    {
+      "add": {
+        "index": "school_index",
+        "alias": "ss_alias",
+        "routing": "scho",
+        "is_write_index": true
+      }
+    },
+    {
+      "add": {
+        "index": "student_index",
+        "alias": "ss_alias"
+      }
+    }
+  ]
+}
 
+注： "routing": "scho",  设置路由健：所有ss_alias上的CRUD都会被路由到同一个shard上
+注： "is_write_index": true 当别名绑定多个索引时，被设置is_write_index的索引可以被别名修改，而且一个别名只能在一个索引上设置is_write_index；
+```
 
+#### 路由查询
 
+```
+GET ss_alias/_search?routing=scho
+{
+  "explain": true
+}
 
-
+只会返回school_index，同一分片上的数据，去掉?routing=scho可以返回别名下所有索引的数据
+```
 
 
 
