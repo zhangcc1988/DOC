@@ -478,6 +478,29 @@ PUT school_alias/_doc/1
 
 ```
 
+
+
+### Bulk
+
+#### 批量修改数据
+
+| 行为     | 解释                                                   |
+| -------- | ------------------------------------------------------ |
+| `create` | 当文档不存在时创建之。详见《创建文档》                 |
+| `index`  | 创建新文档或替换已有文档。见《索引文档》和《更新文档》 |
+| `update` | 局部更新文档。见《局部更新》                           |
+| `delete` | 删除一个文档。见《删除文档》                           |
+
+```
+POST middle_school/_doc/_bulk
+{"create":{"_id":4}}
+{"id":"4","name":"陵南中学","address":"神奈川"}
+{"create":{"_id":5}}
+{"id":"5","name":"海南附中","address":"神奈川"}
+```
+
+
+
 ### Delete
 
 #### 删除部分文档数据
@@ -491,6 +514,8 @@ POST es_member_activity_goods_for_search/content/_delete_by_query
 }
 
 ```
+
+
 
 ### Alias
 
@@ -529,8 +554,6 @@ POST /_aliases
 ```
 DELETE /{index}/_alias/{name}  
 ```
-
-
 
 #### 修改别名
 
@@ -649,9 +672,215 @@ GET ss_alias/_search?routing=scho
 只会返回school_index，同一分片上的数据，去掉?routing=scho可以返回别名下所有索引的数据
 ```
 
+### Aggregation
 
+#### Metrics Aggregation (指标)
 
+##### avg,sum,max,min
 
+```
+GET middle_school_alias/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "stuSum": {
+      "sum": {
+        "field": "stuNum"
+      }
+    }
+  }
+}
+注：stuSum:为自定义，sum:求和关键字，stuNum:聚合字段
+```
+
+##### value_count （字段统计）
+
+```
+GET middle_school_alias/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "nameCount": {
+      "value_count": {
+        "field": "name.keyword"
+      }
+    }
+  }
+}
+注：类似sql中的select count("name") 统计字段“name”的个数
+```
+
+##### stats （统计聚合）
+
+```
+GET middle_school_alias/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "stuNumStatas": {
+      "stats": {
+        "field": "stuNum"
+      }
+    }
+  }
+}
+注：统计stuNum的 "count","min","max","avg","sum"
+```
+
+##### cardinality （去重统计）
+
+```
+GET middle_school_alias/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "nameCount": {
+      "cardinality": {
+        "field": "address.keyword"
+      }
+    }
+  }
+}
+注：统计address去重后的个数
+```
+
+#### Bucket Aggregation (桶)
+
+##### terms (词聚合)
+
+```
+GET middle_school_alias/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "stuNun_terms": {
+      "terms": {
+        "field": "address.keyword",
+        "size": 10,
+        "order": {
+          "_count": "desc"
+        },
+        "min_doc_count": 2,
+        "include": "神.*",
+        "exclude": "U.*"
+      }
+    }
+  }
+}
+注：field 参与聚合字段；
+注：size 	定义返回buckets的size，默认全部返回；
+注：order （_term）:key值进行排序；（_count）:doc_count进行排序；
+注：min_doc_count 返回doc_count不能少于该设定值；
+注：include 返回key值需包含该设定值
+注：exclude 返回key值不能含有该设定值
+
+注：条件field必填，其他看需要
+
+返回例子：
+  "aggregations": {
+    "stuNun_terms": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "神奈川",
+          "doc_count": 3
+        }
+      ]
+    }
+  }
+```
+
+##### filter 
+
+```
+GET middle_school_alias/_search
+{
+  "aggs": {
+    "t_shirts": {
+      "filter": {
+        "term": {
+          "address.keyword": "神奈川"
+        }
+      },
+      "aggs": {
+        "stuNum_avg": {
+          "avg": {
+            "field": "stuNum"
+          }
+        }
+      }
+    }
+  }
+}
+注：过滤聚合。基于一个条件，来对当前的文档进行过滤的聚合
+
+返回例子：
+  "aggregations": {
+    "t_shirts": {
+      "doc_count": 3,
+      "stuNum_avg": {
+        "value": 2377.3333333333335
+      }
+    }
+  }
+```
+
+##### range (范围聚合)
+
+```
+GET middle_school_alias/_search
+{
+  "aggs": {
+    "stuNum_R": {
+      "range": {
+        "field": "stuNum",
+        "ranges": [
+          {
+            "to": 500
+          },
+          {
+            "from": 500
+          }
+        ]
+      }
+    }
+  }
+}
+注：分组返回 [from,to) 前闭后开原则，分[0,500),[500,~)两组返回统计个数
+
+返回例子：
+ "aggregations": {
+    "stuNum_R": {
+      "buckets": [
+        {
+          "key": "*-500.0",
+          "to": 500,
+          "doc_count": 1
+        },
+        {
+          "key": "500.0-*",
+          "from": 500,
+          "doc_count": 4
+        }
+      ]
+    }
+  }
+```
+
+#### Pipeline Aggregation (管道)
+
+#### Matrix Aggregation (矩阵)
 
 
 
