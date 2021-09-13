@@ -1,4 +1,4 @@
-## 4ES SearchAPI
+## ES SearchAPI
 
 ### 指定查询的索引
 
@@ -884,7 +884,20 @@ GET middle_school_alias/_search
 
 
 
+#### 角本设置 
 
+```
+PUT _cluster/settings
+{
+    "transient" : {
+        "script.max_compilations_rate" : "100/1m"
+    }
+}
+
+GET _cluster/settings
+
+ElasticSearch 默认： 5分钟内执行脚本编译超过75个
+```
 
 
 
