@@ -897,6 +897,16 @@ PUT _cluster/settings
 GET _cluster/settings
 
 ElasticSearch 默认： 5分钟内执行脚本编译超过75个
+
+
+PUT _settings
+{
+  "index": {
+    "max_result_window": 20000
+  }
+}
+
+
 ```
 
 
