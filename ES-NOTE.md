@@ -906,12 +906,28 @@ PUT _settings
   }
 }
 
+PUT /_all/_settings
+PUT /es_store_product_for_search/_settings
+{
+    "index.search.slowlog.threshold.query.warn":"5s",
+    "index.search.slowlog.threshold.query.info":"2s",
+    "index.search.slowlog.threshold.query.debug":"1s",
+    "index.search.slowlog.threshold.query.trace":"400ms",
+    "index.search.slowlog.threshold.fetch.warn":"1s",
+    "index.search.slowlog.threshold.fetch.info":"800ms",
+    "index.search.slowlog.threshold.fetch.debug":"500ms",
+    "index.search.slowlog.threshold.fetch.trace":"200ms",
+    "index.indexing.slowlog.threshold.index.warn":"5s",
+    "index.indexing.slowlog.threshold.index.info":"2s",
+    "index.indexing.slowlog.threshold.index.debug":"1s",
+    "index.indexing.slowlog.threshold.index.trace":"400ms"
+}
 
 ```
 
+在host 文件加入IP 10.186.132.26
 
-
-
+https://core-sync.myutopa.com/core/elasticsearch/index/initDiscountActivityIndex
 
 
 
