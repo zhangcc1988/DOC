@@ -313,6 +313,105 @@ int main()
 
 ##### 内部类
 
+定义嵌套类的初衷是建立仅供某个类的成员函数使用的类类型。目的在于隐藏类名，减少全局的标识符，从而限制用户能否使用该类建立对象。这样可以提高类的抽象能力，并且强调了两个类（外围类和嵌套类）之间的主从关系。
+
+```c++
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class A
+{
+public:
+    class B
+    {
+    public:
+        B(const char *str)
+        {
+            cout << "construct B" << str << endl;
+        }
+        void pirntB();
+    };
+    A() : b(" in class A")
+    {
+        cout << "construct A" << endl;
+    }
+    void printA();
+    B b;
+};
+
+void A::B::pirntB()
+{
+    cout << "fn for B" << endl;
+}
+
+void A::printA()
+{
+    cout << "fn for A" << endl;
+}
+
+int main()
+{
+    A a;
+    a.b.pirntB();
+    a.printA();
+
+    A::B b(" create!!!");
+    return 0;
+}
+```
+
+- 从作用域的角度来看，嵌套类与外围类是两个完全独立的类，只是主从关系，二者不能相互访问，也不存在友元关系。
+
+##### 局部类
+
+在一个函数体内定义的类称为局部类。局部类可以定义自己的数据成员和函数成员。它也是一种作用域受限的类。
+
+```c++
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+int global_v = 100;
+
+void func()
+{
+    static const int part_v = 10;
+    class A
+    {
+    public:
+        int num;
+        A(int a)
+        {
+            num = a;
+        }
+        void printA()
+        {
+            cout << "global value:" << global_v << endl;
+            cout << num << endl;
+        }
+    };
+
+    A a(part_v);
+    a.printA();
+}
+
+int main()
+{
+    func();
+    return 0;
+}
+```
+
+- 局部类只能在定义它函数内部使用，在其他地方不能使用；
+- 局部类的所有成员函数都必须定义在类体内，因此在结构上不是特别灵活；
+- 在局部类的成员函数中，可以访问上级作用域的所有变量，如函数局部变量、全局变量等；
+- 局部类中不能定义静态数据成员，因为这种数据成员的初始化无法完成，静态成员数据的定义和初始化必须放在全局作用域。
+
+
+
 ##### 抽象类（接口）
 
 ```c++
