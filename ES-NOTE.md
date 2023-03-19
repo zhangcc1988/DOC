@@ -927,7 +927,7 @@ PUT /es_store_product_for_search/_settings
 
 在host 文件加入IP 10.186.132.26
 
-https://core-sync.myutopa.com/core/elasticsearch/index/initDiscountActivityIndex
+
 
 
 
